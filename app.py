@@ -8,19 +8,39 @@ import gdown
 import plotly.express as px
 
 
-
-
-
 @st.cache_resource
 def carrega_modelo():
-    url = 'https://drive.google.com/uc?id=1VPpwl8cagLfP8j6smglsCrarV0l82Jkh'
-    
-    gdown.download(url,'modelo_quantizado16bits.tflite')
-    interpreter = tf.lite.Interpreter(model_path='modelo_quantizado16bits.tflite')
+    """
+        Busca modelo no google drive e carrega interpretador com tensorflow
+    """
+
+    #https://drive.google.com/file/d/1j0vKzXC6oaLyoeSmv0BiGyqrkGWNNFt5/view?usp=drive_link
+    #url = 'https://drive.google.com/uc?id=1j0vKzXC6oaLyoeSmv0BiGyqrkGWNNFt5'
+
+    url = transformar_link_drive('https://drive.google.com/file/d/1j0vKzXC6oaLyoeSmv0BiGyqrkGWNNFt5/view?usp=drive_link')
+
+    gdown.download(url, 'modelo_quantizado16bits.tflite')
+    interpreter = tf.lite.Interpreter(model_path="modelo_quantizado16bits.tflite")
     interpreter.allocate_tensors()
 
-    
     return interpreter
+
+def transformar_link_drive(link_original):
+    """
+    Transforma um link do Google Drive do formato 'view' para o formato 'uc'.
+
+    Args:
+        link_original: O link do Google Drive no formato 'view'.
+
+    Returns:
+        O link do Google Drive no formato 'uc', ou None se o link não for válido.
+    """
+    try:
+        id_arquivo = link_original.split('/d/')[1].split('/')[0]
+        novo_link = f'https://drive.google.com/uc?id={id_arquivo}'
+        return novo_link
+    except IndexError:
+        return None
 
 
 def carrega_imagem():
