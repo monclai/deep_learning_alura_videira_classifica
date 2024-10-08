@@ -64,23 +64,25 @@ def transformar_link_drive(link_original):
     except IndexError:
         return None
 
-def previsao(interpreter, image):
-
+def previsao(interpreter,image):
+    # Obtém detalhes dos tensores de entrada e saída
     input_details = interpreter.get_input_details()
     output_details = interpreter.get_output_details()
 
+    # Define o tensor de entrada para o modelo
     interpreter.set_tensor(input_details[0]['index'], image)
 
+    # Executa a inferência
     interpreter.invoke()
 
+    # Obtém a saída do modelo
     output_data = interpreter.get_tensor(output_details[0]['index'])
     classes = ['BlackMeasles', 'BlackRot', 'HealthyGrapes', 'LeafBlight']
-
     df = pd.DataFrame()
     df['classes'] = classes
     df['probabilidades (%)'] = 100*output_data[0]
-
-    fig = px.bar(df,y='classes',x='probabilidades (%)',  orientation='h', text='probabilidades (%)', title='Probabilidade de Classes de Doenças em Uvas')
+    fig = px.bar(df, y='classes', x='probabilidades (%)', orientation='h', text='probabilidades (%)',
+             title='Probabilidade de Classes de Doenças em Uvas')
     st.plotly_chart(fig)
 
 def main():
