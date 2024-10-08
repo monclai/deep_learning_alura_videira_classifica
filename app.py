@@ -1,12 +1,11 @@
 import streamlit as st
+import gdown
+import tensorflow as tf
+import io
 from PIL import Image
 import numpy as np
-import tensorflow as tf
 import pandas as pd
-import io
-import gdown
 import plotly.express as px
-
 
 @st.cache_resource
 def carrega_modelo():
@@ -25,6 +24,29 @@ def carrega_modelo():
 
     return interpreter
 
+def carrega_imagem():
+    """
+        Carrega imagem passada pelo o usuário e prepara imagem para o processamento
+
+        Returns:
+         image: NDArray[floating[Any]] -> Imagem processada com numpy
+    """
+
+    uploaded_file = st.file_uploader("Arraste e solte uma imagem aqui ou clique para selecionar uma", 
+                                     type=['png', 'jpg', 'jpeg'])
+    if uploaded_file is not None:
+        image_data = uploaded_file.read()
+        image = Image.open(io.BytesIO(image_data))
+
+        st.image(image)
+        st.success('Image foi carregada com sucesso')
+
+        image = np.array(image, dtype=np.float32)
+        image = image / 255.
+        image = np.expand_dims(image, axis=0)
+
+        return image
+
 def transformar_link_drive(link_original):
     """
     Transforma um link do Google Drive do formato 'view' para o formato 'uc'.
@@ -41,29 +63,6 @@ def transformar_link_drive(link_original):
         return novo_link
     except IndexError:
         return None
-
-
-def carrega_imagem():
-    # Cria um file uploader que permite o usuário carregar imagens
-    uploaded_file = st.file_uploader("Arraste e solte uma imagem aqui ou clique para selecionar uma", type=['png', 'jpg', 'jpeg'])
-    if uploaded_file is not None:
-        # Para ler a imagem como um objeto PIL Image
-        image_data = uploaded_file.read()
-        image = Image.open(io.BytesIO(image_data))
-
-        # Mostrar a imagem carregada
-        st.image(image)
-        st.success("Imagem carregada com sucesso!")
-
-        #Pré-processamento da imagem
-        image = np.array(image, dtype=np.float32)
-        image = image / 255.0  # Normalização para o intervalo [0, 1]
-        image = np.expand_dims(image, axis=0)
-
-        return image
-
-
-
 
 def previsao(interpreter,image):
     # Obtém detalhes dos tensores de entrada e saída
@@ -86,24 +85,22 @@ def previsao(interpreter,image):
              title='Probabilidade de Classes de Doenças em Uvas')
     st.plotly_chart(fig)
 
-#
 def main():
     st.set_page_config(
         page_title="Classifica Folhas de Videira",
         page_icon="🍇",
     )
-    
+
     st.write("# Classifica Folhas de Videira! 🍇")
-    
-
+    #Carrega modelo
     interpreter = carrega_modelo()
-
+    #Carrega imagem
     image = carrega_imagem()
-
+    #Classifica
     if image is not None:
+        previsao(interpreter, image)
 
-        previsao(interpreter,image)
-    
+
 
 
 if __name__ == "__main__":
